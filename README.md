@@ -9,6 +9,6 @@ Comandos para executar o arquivo init:
 2. $ ./init 
 
 
-OBS: O script utiliza o nome do arquivo "Multiplicacao_matricial_matrizes" como referência
+OBS: O script utiliza o nome do arquivo "Multiplicacao_matricial_matrizes" como referência,
 se o mesmo for alterado, altere no script init também :D . 
 
