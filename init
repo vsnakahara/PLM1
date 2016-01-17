@@ -1,0 +1,4 @@
+#!/bin/sh
+as exec.s -o exec.o &&
+ld exec.o -l c -dynamic-linker /lib/ld-linux.so.2 -o exec &&
+./exec 
