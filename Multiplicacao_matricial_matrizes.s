@@ -1,19 +1,18 @@
 .section .data
 #A(mxn) e B(nxp)
-abertura:	.asciz		"********* Multiplicacao matricial para matrizes ********\n"
-input1:		.asciz		"\nDigite o numero de linhas da matriz A: "
-input2:		.asciz		"\nDigite o numero de colunas da matriz A (e numero de linhas da matriz B): "
-input3:		.asciz		"\nDigite o numero de linhas da matriz B: "
-formato:	.asciz		"%d"
-breakline:  .asciz 		"\n"
-mostra1:    .asciz "Elementos Lidos: " 
-pedenum:    .asciz "Digite o elemento da matriz A: "
-pedenum2:   .asciz "Digite o elemento da matriz B: "
-matrizA: 	.space 900
-matrizB: 	.space 900
-
-mostra2:   .asciz " %d \n"
-
+abertura:	   .asciz "********* Multiplicacao matricial para matrizes ********\n"
+input1:		   .asciz "\nDigite o numero de linhas da matriz A: "
+input2:		   .asciz "\nDigite o numero de colunas da matriz A (e numero de linhas da matriz B): "
+input3:		   .asciz "\nDigite o numero de linhas da matriz B: "
+formato:	   .asciz "%d"
+breakline:     .asciz "\n"
+mostra1:       .asciz "Elementos Lidos: " 
+pedenum:       .asciz "Digite o elemento da matriz A: "
+pedenum2:      .asciz "Digite o elemento da matriz B: "
+matrizA: 	   .space 900
+matrizB: 	   .space 900
+mostra2:       .asciz " %d \n"
+totalColuna  : .int 0 
 totElementosA: .int 0
 totElementosB: .int 0 
 contLinha: 	   .int 0
@@ -139,26 +138,60 @@ mostravet:
 	pushl $mostra1 
 	call printf 
 	addl $4, %esp 
-	movl totElementosB, %ecx 
-	movl $matrizB, %edi 
-
+	movl totElementosA, %ecx 
+	movl $matrizA, %edi
+	movl $matrizB, %esi 
 
 # pulalin:
 # 	pushl $breakline
 # 	call printf
 
-mostranum:
-	addl $4, %edi ## PULA PARA O SEGUNDO ELEMENTO -- EXEMPLO
-	movl (%edi) , %ebx 
+multiplicaNum:
+	incl totalColuna
+	movl (%edi) , %eax 
+	addl $4, %edi      #avanca 4
 	pushl %edi 
 	pushl %ecx
-	pushl %ebx
- 
+	pushl %eax
+
 	pushl $mostra2
 	call printf
+
+	addl $4, %esp   ## Limpa registradores 
+
+	movl (%esi) , %ebx 
+	cmpl %ecx , totElementosA
+	jne pegaColuna
+
 	
+pegaColuna:
+	addl $4, %esi
+
+	pushl %esi  
+	pushl %ebx
+	pushl $formato 
+	call printf 
+
+
+	addl $4, %esp   ## Limpa registradores 
+
+
+	popl %ecx
+	popl %edi 
+	popl %esi 
+	loop multiplicaNum
+
+	movl totElementosB, %ecx
+	pushl $limpaReg
+
+	pushl $breakline
+	call printf
+
+
 	pushl	$0
 	call	exit
+
+
 
 
 
