@@ -3,7 +3,7 @@
 abertura:	   .asciz "\n{  		  Multiplicacao matricial para matrizes                   }\n"
 integrantes:   .asciz "{_________ Rafael Altar _ RA: 83021 - Vanessa Nakahara _ RA: 83550 _______}\n"
 input1:		   .asciz "\nDigite o numero de linhas da matriz A: "
-input2:		   .asciz "\nDigite o numero de colunas da matriz A (e numero de linhas da matriz B): "
+input2:		   .asciz "\nDigite o numero de colunas da matriz A (e numero de colunas da matriz B): "
 input3:		   .asciz "\nDigite o numero de linhas da matriz B: "
 pedenum:       .asciz "Digite o elemento da matriz A[%d][%d]: "
 pedenum2:      .asciz "Digite o elemento da matriz B[%d][%d]: "
@@ -51,7 +51,7 @@ i:			   .int 0
 .globl _start
 
 _start:
-
+	
 	pushl 	$abertura
 	call	printf
 
@@ -79,6 +79,7 @@ _start:
 	pushl $breakline
 	call printf
 
+ #Calcula o total de elementos da matriz A 
  calcularElementos:
  	call limpaReg
  	movl m, %eax
@@ -86,7 +87,8 @@ _start:
  	mull %ebx
  	movl %eax, totElementosA
  	pushl totElementosA
-
+ 
+ #Calcula o total de elementos da matriz B
  calcularElementosB:
  	call limpaReg
  	movl p, %eax
@@ -94,6 +96,7 @@ _start:
  	mull %ebx
  	movl %eax, totElementosB
 
+#Calcula o total de elementos da matriz C
 calcularElementosC:
  	call limpaReg
  	movl p, %eax
@@ -101,13 +104,15 @@ calcularElementosC:
  	mull %ebx
  	movl %eax, totElementosC
 
+#Incializa matriz A
 criarMatrizA:
 	movl totElementosA, %ecx
-	movl $matrizA , %edi  #endereco inicial do vetor 
-	addl $16, %esp      #descarta elementos empilhados   
+	movl $matrizA , %edi      #endereco inicial do vetor 
+	addl $16, %esp            #descarta elementos empilhados   
 	movl $0 , %ebx
 	movl $1 , %eax	
 
+#Percorre %edi , pulando 4 bytes para cada elemento
 lenum:
 	incl %ebx 
 	pushl %edi #backupeia %edi , %ecx , %ebx 
@@ -115,10 +120,8 @@ lenum:
 	pushl %ebx 
 	pushl %eax
 
-
-# 
-	pushl %ebx # mudei aki
-	pushl %eax # mudei aki
+	pushl %ebx 
+	pushl %eax 
 	pushl $pedenum
 	call printf 
 
@@ -128,27 +131,27 @@ lenum:
 	pushl $breakline
 	call printf 
 
-	addl $24 , %esp # mudei aki
+	addl $24 , %esp 
 	
 	popl %eax
 	popl %ebx
 	popl %ecx
 	popl %edi
-	# movl num, %eax # mudei aki 
-	# movl %eax , (%edi) #coloca posição corrente do vetor # mudei aki
-	addl $4, %edi      #avança 4 bits de posição no vetor ?! 
-	cmpl n,%ebx # mudei aki
-	jne contLA # mudei aki
-	movl $0, %ebx # mudei aki
-	incl %eax # mudei aki
-contLA: # mudei aki
+	
+	addl $4, %edi    
+	cmpl n,%ebx 
+	jne contLA    #Faz o controle dos prints de posição da matriz
+	movl $0, %ebx 
+	incl %eax 
+contLA: 
 	loop lenum
 
+#Incializa matriz B
 criarMatrizB:
 	call limpaReg
 	movl totElementosB, %ecx
 	movl $matrizB , %edi  #endereco inicial do vetor 
-	addl $16, %esp      #descarta elementos empilhados   
+	addl $16, %esp        #descarta elementos empilhados   
 	movl $0 , %ebx
 	movl $1 , %eax	
 
@@ -160,9 +163,8 @@ lenum2:
 	pushl %eax
 
 
-# 
-	pushl %ebx # mudei aki
-	pushl %eax # mudei aki
+	pushl %ebx 
+	pushl %eax
 	pushl $pedenum2
 	call printf 
 
@@ -172,20 +174,19 @@ lenum2:
 	pushl $breakline
 	call printf 
 
-	addl $24 , %esp # mudei aki
+	addl $24 , %esp
 	
 	popl %eax
 	popl %ebx
 	popl %ecx
 	popl %edi
-	# movl num, %eax # mudei aki 
-	# movl %eax , (%edi) #coloca posição corrente do vetor # mudei aki
-	addl $4, %edi      #avança 4 bits de posição no vetor ?! 
-	cmpl n,%ebx # mudei aki
-	jne contLB # mudei aki
-	movl $0, %ebx # mudei aki
-	incl %eax # mudei aki
-contLB: # mudei aki
+	
+	addl $4, %edi    
+	cmpl n,%ebx 
+	jne contLB     #Faz o controle dos prints de posição da matriz
+	movl $0, %ebx 
+	incl %eax 
+contLB: 
 	loop lenum2
 
 getConstante:
@@ -194,7 +195,8 @@ getConstante:
 	movl $4, %ebx 
 	mull %ebx
 	movl %eax, constCol
-	
+
+#Move a linha da matriz A para iniciar os calculos dentro do loop	
 main:
 	movl m, %ecx 
 	movl $matrizA, %edi
@@ -242,6 +244,7 @@ loopLinhaA: #<< Inicia LoopA para Linhas
 
 loop loopLinhaA # Finaliza LoopA para Linha >>
 
+#Mostra a Matriz preenchida A
 mostraMatA:
 	pushl $cabMatrizA
 	call printf
@@ -283,6 +286,7 @@ mostraMatB:
 	call limpaReg
 	movl totElementosB , %ecx
 
+#Mostra a Matriz preenchida B
 getMatrizB:
 	pushl %ecx
 	
@@ -322,12 +326,14 @@ mostraMatrizC:
 
 
 ## INICIO DAS ROTINAS ##
+#Rotina para limpar os registradores
 limpaReg:
 	movl $0, %eax 
 	movl $0, %ebx 
 	movl $0, %ecx 
 ret
 
+#Rotina para pegar a posição do elemento da matriz A
 getIndiceA:
 	movl i , %eax
 	movl n, %ebx
@@ -341,6 +347,7 @@ getIndiceA:
 	movl  %eax,indiceA
 ret
 
+#Rotina para pegar a posição do elemento da matriz B
 getIndiceB:
 	movl k , %eax
 	movl p, %ebx
@@ -354,6 +361,7 @@ getIndiceB:
 	movl %eax,indiceB
 ret
 
+#Rotina para pegar a posição que sera inserido o elemento na matriz C
 getIndiceC:
 	movl i, %eax
 	movl p, %ebx
@@ -367,6 +375,7 @@ getIndiceC:
 	movl %eax,indiceC
 ret
 
+#Rotina para pegar o elemento contido na posição já buscada da matriz A
 getElementoA:
 	call getIndiceA			
 	movl indiceA, %eax
@@ -377,7 +386,7 @@ getElementoA:
 	popl %edi				
 ret
 
-
+#Rotina para pegar o elemento contido na posição já buscada da matriz B
 getElementoB:
 	call getIndiceB
 	movl indiceB, %eax
@@ -388,6 +397,7 @@ getElementoB:
 	popl %esi			
 ret
 
+#Preenche a matriz C utilizando os elementos buscados em A e B 
 setMatrizC:
 	pushl %ebp
 	call getIndiceC
@@ -404,6 +414,7 @@ setMatrizC:
 	popl %ebp  
 ret
 
+#Mostra a Matriz preenchida resultante
 getMatrizResultante:
 	pushl %ecx
 	
