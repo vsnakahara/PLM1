@@ -5,13 +5,16 @@ integrantes:   .asciz "{_________ Rafael Altar _ RA: 83021 - Vanessa Nakahara _ 
 input1:		   .asciz "\nDigite o numero de linhas da matriz A: "
 input2:		   .asciz "\nDigite o numero de colunas da matriz A (e numero de linhas da matriz B): "
 input3:		   .asciz "\nDigite o numero de linhas da matriz B: "
-pedenum:       .asciz "Digite o elemento da matriz A: "
-pedenum2:      .asciz "Digite o elemento da matriz B: "
+pedenum:       .asciz "Digite o elemento da matriz A[%d][%d]: "
+pedenum2:      .asciz "Digite o elemento da matriz B[%d][%d]: "
+cabMatrizA:    .asciz "Matriz [ A ] Preenchida : \n"
+cabMatrizB:    .asciz "\n\nMatriz [ B ] Preenchida : \n"
+cabMatrizC:    .asciz "\n\nMatriz [ C ] Resultante : \n"
 matrizA: 	   .space 900
 matrizB: 	   .space 900
 matrizC: 	   .space 1800
 
-showElemento:  .asciz " %d \n"
+showElemento:  .asciz " %d\t"
 formato:	   .asciz "%d"
 breakline:     .asciz "\n"
 
@@ -102,29 +105,43 @@ criarMatrizA:
 	movl totElementosA, %ecx
 	movl $matrizA , %edi  #endereco inicial do vetor 
 	addl $16, %esp      #descarta elementos empilhados   
-	movl $0 , %ebx	
+	movl $0 , %ebx
+	movl $1 , %eax	
 
 lenum:
 	incl %ebx 
 	pushl %edi #backupeia %edi , %ecx , %ebx 
 	pushl %ecx 
 	pushl %ebx 
+	pushl %eax
 
+
+# 
+	pushl %ebx # mudei aki
+	pushl %eax # mudei aki
 	pushl $pedenum
 	call printf 
-	pushl $num
+
+	pushl %edi
 	pushl $formato 
 	call scanf
 	pushl $breakline
 	call printf 
-	addl $16 , %esp 
 
+	addl $24 , %esp # mudei aki
+	
+	popl %eax
 	popl %ebx
 	popl %ecx
 	popl %edi
-	movl num, %eax
-	movl %eax , (%edi) #coloca posição corrente do vetor
+	# movl num, %eax # mudei aki 
+	# movl %eax , (%edi) #coloca posição corrente do vetor # mudei aki
 	addl $4, %edi      #avança 4 bits de posição no vetor ?! 
+	cmpl n,%ebx # mudei aki
+	jne contLA # mudei aki
+	movl $0, %ebx # mudei aki
+	incl %eax # mudei aki
+contLA: # mudei aki
 	loop lenum
 
 criarMatrizB:
@@ -132,29 +149,43 @@ criarMatrizB:
 	movl totElementosB, %ecx
 	movl $matrizB , %edi  #endereco inicial do vetor 
 	addl $16, %esp      #descarta elementos empilhados   
-	movl $0 , %ebx		
+	movl $0 , %ebx
+	movl $1 , %eax	
 
 lenum2:
 	incl %ebx 
 	pushl %edi #backupeia %edi , %ecx , %ebx 
 	pushl %ecx 
 	pushl %ebx 
+	pushl %eax
 
+
+# 
+	pushl %ebx # mudei aki
+	pushl %eax # mudei aki
 	pushl $pedenum2
 	call printf 
-	pushl $num
+
+	pushl %edi
 	pushl $formato 
 	call scanf
 	pushl $breakline
 	call printf 
-	addl $16 , %esp 
 
+	addl $24 , %esp # mudei aki
+	
+	popl %eax
 	popl %ebx
 	popl %ecx
 	popl %edi
-	movl num, %eax
-	movl %eax , (%edi) #coloca posição corrente do vetor
+	# movl num, %eax # mudei aki 
+	# movl %eax , (%edi) #coloca posição corrente do vetor # mudei aki
 	addl $4, %edi      #avança 4 bits de posição no vetor ?! 
+	cmpl n,%ebx # mudei aki
+	jne contLB # mudei aki
+	movl $0, %ebx # mudei aki
+	incl %eax # mudei aki
+contLB: # mudei aki
 	loop lenum2
 
 getConstante:
@@ -211,7 +242,80 @@ loopLinhaA: #<< Inicia LoopA para Linhas
 
 loop loopLinhaA # Finaliza LoopA para Linha >>
 
+mostraMatA:
+	pushl $cabMatrizA
+	call printf
+	call limpaReg
+	movl totElementosA , %ecx
+
+getMatrizA:
+	pushl %ecx
+	
+	movl (%edi),%ebx
+	addl $4, %edi
+	pushl %edi
+	pushl %ebx
+	
+	pushl $showElemento
+	call printf
+	addl $8, %esp
+
+	popl %edi
+	popl %ecx
+
+
+	movl %ecx, %eax
+	movl $0,%edx
+	movl m,%ebx
+	divl %ebx
+	cmpl $1, %edx
+	jne contMatrizA
+	movl %ecx,%ebx
+	pushl $breakline
+	call printf
+	movl %ebx,%ecx
+contMatrizA:
+loop getMatrizA
+
+mostraMatB:
+	pushl $cabMatrizB
+	call printf
+	call limpaReg
+	movl totElementosB , %ecx
+
+getMatrizB:
+	pushl %ecx
+	
+	movl (%esi),%ebx
+	addl $4, %esi
+	pushl %esi
+	pushl %ebx
+	
+	pushl $showElemento
+	call printf
+	addl $8, %esp
+
+	popl %esi
+	popl %ecx
+
+
+	movl %ecx, %eax
+	movl $0,%edx
+	movl m,%ebx
+	divl %ebx
+	cmpl $1, %edx
+	jne contMatrizB
+	movl %ecx,%ebx
+	pushl $breakline
+	call printf
+	movl %ebx,%ecx
+contMatrizB:
+loop getMatrizB
+
 mostraMatrizC:
+	pushl $cabMatrizC
+	call printf
+	call limpaReg
 	movl totElementosC, %ecx
 	pushl %ecx
 	jmp getMatrizResultante
@@ -222,7 +326,6 @@ limpaReg:
 	movl $0, %eax 
 	movl $0, %ebx 
 	movl $0, %ecx 
-	movl $0, %edi
 ret
 
 getIndiceA:
@@ -301,14 +404,6 @@ setMatrizC:
 	popl %ebp  
 ret
 
-getMatrizA:
-
-ret
-
-getMatrizB:
-
-ret
-
 getMatrizResultante:
 	pushl %ecx
 	
@@ -323,10 +418,28 @@ getMatrizResultante:
 
 	popl %ebp
 	popl %ecx
+
+
+	movl %ecx, %eax
+	movl $0,%edx
+	movl p,%ebx
+	divl %ebx
+	cmpl $1, %edx
+	jne contMR
+	movl %ecx,%ebx
+	pushl $breakline
+	call printf
+	movl %ebx,%ecx
+contMR:
 loop getMatrizResultante
+
+pulaLinha:
+	pushl $breakline
+	call printf
 
 ## FIM DAS ROTINAS ##
 
 fim:
 	pushl	$0
 	call	exit
+
