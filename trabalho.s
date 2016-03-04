@@ -1,3 +1,4 @@
+#RA _ 83021_RAFAEL_ALTAR/83550_VANESSA_NAKAHARA
 .section .data
  
 abertura:	   .asciz "\n{  		  Multiplicacao matricial para matrizes                   }\n"
@@ -27,8 +28,6 @@ showElementoBarra: .asciz " %lf\n"
 showFloatLinha: .asciz " %.2lf\n"
 showFloatTab:   .asciz " %.2lf\t"
 
-showFloatQuebra: .asciz " %.2lf\n\n"
-
 constCol:	   .int   0 
 soma: 		   .float 0
 num: 		   .int   0
@@ -43,9 +42,6 @@ indiceA:       .int 0
 indiceB:       .int 0
 indiceC:       .int 0
 
-## Elementos da matriz
-elementoA:     .float 0 
-elementoB:	   .float 0 
 
 ## Linhas e Colunas das Matrizes 
 m:			   .int 0
@@ -58,31 +54,41 @@ j:			   .int 0
 k:			   .int 0
 i:			   .int 0
 
+## Indice auxiliar
+## para o loop com float e quebra de linha
+contQuebra:		.int 0
+
+## Indice de movimentação da posição de escrita 
+## no arquivo
 ponteiroArqSaida: .int 0
 
+## Formato padrão de float e float com 2 decimais
 formato1:         .asciz "%lf"
 formato2:         .asciz "%.2lf"
-str_arq_out:      .ascii "%.2lf"
-tam_str_arq_out:  
 
+## Formato padrão de String
 formatoString:	   .asciz "%s"
-formatoByte:	   .asciz ""
+
+## Variaveis auxiliares de tratamento do arquivo
 espaco: 		   .byte ' '
 quebra: 		   .byte '\n'
 enter: 			   .byte 10
 return: 		   .byte 13
 NULL: 			   .byte 0
 
-auxValor:          .space 10000
+## Variaveis auxiliares de alocação da String de nome de arquivos
 arqMatrizA:	       .space 50
 arqMatrizB:	   	   .space 50
 arqMatrizC:	   	   .space 50
-concat:			   .space 20
-tamStrArqIn:	   .space 20000
 
+## Variaveis auxiliares de tratamento do arquivo
+auxValor:          .space 900
+concat:			   .space 900
+tamStrArqIn:	   .space 900
 
+## Variaveis auxiliares para manipulação das String de arquivos
 ponteiro:		.int 0
-tmStr: 			.int 4
+tamStringAux: 	.int 4
 stringAux:		.asciz	""
 
 pedeArqA:      .ascii "\nEntre com o nome do arquivo da Matriz A\n> "
@@ -109,27 +115,27 @@ SYS_CREATE: .int 8
 STD_OUT: .int 1 #descritor do video
 STD_IN:	 .int 2 #descritor do teclado
 
-O_RDONLY:						.int 0x0000
-O_WRONLY:						.int 0x0001
-O_RDWR:							.int 0x0002
-O_CREATE:						.int 0x0040
-O_EXCL:							.int 0x0080
-O_APPEND:						.int 0x0400
-O_TRUNC:						.int 0x0200
+O_RDONLY:	.int 0x0000
+O_WRONLY:	.int 0x0001
+O_RDWR:		.int 0x0002
+O_CREATE:	.int 0x0040
+O_EXCL:		.int 0x0080
+O_APPEND:	.int 0x0400
+O_TRUNC:	.int 0x0200
 
-S_IRWXU:						.int 0x01C0
-S_IRUSR:						.int 0x0100
-S_IWUSR:						.int 0x0080
-S_IXUSR:						.int 0x0040
-S_IRWXG:						.int 0x0038
-S_IRGRP:						.int 0x0020
-S_IWGRP:						.int 0x0010
-S_IXGRP:						.int 0x0008
-S_IRWXO:						.int 0x0007
-S_IROTH:						.int 0x0004
-S_IWOTH:						.int 0x0002
-S_IXOTH:						.int 0x0001
-S_NADA:							.int 0x0000
+S_IRWXU:	.int 0x01C0
+S_IRUSR:	.int 0x0100
+S_IWUSR:	.int 0x0080
+S_IXUSR:	.int 0x0040
+S_IRWXG:	.int 0x0038
+S_IRGRP:	.int 0x0020
+S_IWGRP:	.int 0x0010
+S_IXGRP:	.int 0x0008
+S_IRWXO:	.int 0x0007
+S_IROTH:	.int 0x0004
+S_IWOTH:	.int 0x0002
+S_IXOTH:	.int 0x0001
+S_NADA:		.int 0x0000
 
 .section .bss
 
@@ -148,6 +154,8 @@ _start:
 	addl 	$4, %esp
 
 leNomeArquivos:
+	## Incio da leitura do nome do arquivo 
+	## de entrada da Matriz A
 	movl SYS_WRITE, %eax
 	movl STD_OUT, %ebx
 	movl $pedeArqA, %ecx
@@ -163,7 +171,8 @@ leNomeArquivos:
 	movl $arqMatrizA, %edi
 	call tratanomearq
 	
-
+	## Incio da leitura do nome do arquivo
+	## de entrada da Matriz B
 	movl SYS_WRITE, %eax
 	movl STD_OUT, %ebx
 	movl $pedeArqB, %ecx
@@ -179,6 +188,8 @@ leNomeArquivos:
 	movl $arqMatrizB, %edi
 	call tratanomearq
 
+	## Incio da leitura do nome do arquivo
+	## de saida da Matriz Resultante
 	movl SYS_WRITE, %eax
 	movl STD_OUT, %ebx
 	movl $pedeArqC, %ecx
@@ -195,38 +206,12 @@ leNomeArquivos:
 	call tratanomearq
 
 
-	jmp getDadosIniciais
-
-tratanomearq:
-
-	pushl %edi
-	movl $-1, %ebx
-
-volta3:
-
-	addl $1, %ebx
-	movb (%edi), %al
-	cmpb enter, %al
-	jz concluinomearq
-	cmpb espaco, %al
-	jz concluinomearq
-	addl $1, %edi
-	jmp volta3
-
-concluinomearq:
-	pushl %edi
-	popl %edi
-	movb NULL, %al
-	movb %al, (%edi)
-	addl $4, %esp
-ret
-
 getDadosIniciais:
 
 	# Lê o nome do arquivo da matriz A
 	pushl 	$input1
 	call 	printf
-	pushl	$m            #LINHA A 
+	pushl	$m           #LINHA A 
 	pushl	$formato
 	call	scanf
 
@@ -238,7 +223,7 @@ getDadosIniciais:
 
 	pushl	$input3
 	call	printf
-	pushl 	$p          #COLUNA B
+	pushl 	$p           #COLUNA B
 	pushl	$formato
 	call 	scanf
 
@@ -270,8 +255,9 @@ calcularElementosC:
  	mull %ebx
  	movl %eax, totElementosC
 
-#Percorre %edi , pulando 4 bytes para cada elemento
 
+##Abre o arquivo de entrada fornecido pelo usuario
+##da matriz A 
 inicioLeitura:
 	movl SYS_OPEN, %eax
 	movl $arqMatrizA , %ebx
@@ -281,9 +267,9 @@ inicioLeitura:
 #Incializa matriz A
 criarMatrizA:
 	movl totElementosA, %ecx
-	movl $matrizA , %edi      #endereco inicial do vetor 
+	movl $matrizA , %edi      
 		
-lenum:
+lenumMatA:
 	pushl %ecx 
 	movl $auxValor, %esi
 
@@ -291,31 +277,33 @@ processaChar:
 	push %eax			
 	push %esi
 
+		##Leitura de 1 byte do arquivo
 		movl %eax, %ebx
-		movl SYS_READ , %eax       ##1
+		movl SYS_READ , %eax       
 		movl  $concat , %ecx
 		movl  $1 , %edx
 		int $0x80
 		pop %esi
 			
 		movb concat, %al
-		# cmpb espaco, %al
-		# je  foi
 
 		movb %al, (%esi)
 		incl %esi
 		pop %eax
+
+		##Controladores de Espaço e Quebra de linha 
+		## dos Elementos do arquivo
 		cmpb $0x0A, concat
 		je converteString
 
 		cmpb $0x20, concat
 		jne processaChar
 
-
+		##Conversão dos bytes concatenados em float
 		converteString:
-			push %eax                 #4
+			push %eax                 
 			movb $0x00,(%esi)
-		  	push $auxValor            #5
+		  	push $auxValor            
 		  	call atof
 		  	addl $4, %esp
 
@@ -325,25 +313,25 @@ processaChar:
 			pop %eax	
 			pop %ecx
 
-loop lenum
+loop lenumMatA
 
 movl SYS_CLOSE, %eax
 int $0x80
 
-#Percorre %edi , pulando 4 bytes para cada elemento
-
+##Abre o arquivo de entrada fornecido pelo usuario
+##da matriz B
 inicioLeitura2:
 	movl SYS_OPEN, %eax
 	movl $arqMatrizB , %ebx
 	movl O_RDONLY , %ecx
 	int $0x80
 
-#Incializa matriz A
+#Incializa matriz B
 criarMatriz2:
 	movl totElementosB, %ecx
 	movl $matrizB , %esi      #endereco inicial do vetor 
 		
-lenum3:
+lenumMatB:
 	pushl %ecx 
 	movl $auxValor, %ebp
 
@@ -351,31 +339,33 @@ processaChar2:
 	push %eax			
 	push %ebp
 
+		##Leitura de 1 byte do arquivo
 		movl %eax, %ebx
-		movl SYS_READ , %eax       ##1
+		movl SYS_READ , %eax       
 		movl  $concat , %ecx
 		movl  $1 , %edx
 		int $0x80
 		pop %ebp
 			
 		movb concat, %al
-		# cmpb espaco, %al
-		# je  foi
 
 		movb %al, (%ebp)
 		incl %ebp
 		pop %eax
+
+		##Controladores de Espaço e Quebra de linha 
+		## dos Elementos do arquivo
 		cmpb $0x0A, concat
 		je converteString2
 
 		cmpb $0x20, concat
 		jne processaChar2
 
-
+		##Conversão dos bytes concatenados em float
 		converteString2:
-			push %eax                 #4
+			push %eax                 
 			movb $0x00,(%ebp)
-		  	push $auxValor            #5
+		  	push $auxValor            
 		  	call atof
 		  	addl $4, %esp
 
@@ -385,8 +375,7 @@ processaChar2:
 			pop %eax	
 			pop %ecx
 
-
-loop lenum3
+loop lenumMatB
 
 movl SYS_CLOSE, %eax
 int $0x80
@@ -440,7 +429,9 @@ loopLinhaA: #<< Inicia LoopA para Linhas
 	incl i
 
 loop loopLinhaA # Finaliza LoopA para Linha >>
-#Mostra a Matriz preenchida B
+
+#Mostra a Matriz A e B preenchidas do arquivo
+#no space 
 call mostraMatA
 call mostraMatB
 
@@ -455,12 +446,12 @@ pedirOpcaoPrint:
 	call  scanf
 
 	cmpl $1 , opt
-	je mostraMatC
+	je escreveMatC
 
 	cmpl $2 , opt
 	jne incializaPrintCVideo
 
-
+##Printa Matriz C na tela 
 incializaPrintCVideo:
 	pushl $cabMatrizC
 	call printf
@@ -468,28 +459,28 @@ incializaPrintCVideo:
 
 	movl $matrizC , %ebp
 	movl totElementosC , %ecx
-	# Inicializar o contador do pula liha
+
 	movl $1, %eax
-	movl %eax, j
+	movl %eax, contQuebra
 elementoMatrizC:
-	# Reatira da matriz e coloca na pilha para a chamada do printf
+	
 	fldl (%ebp)
 	movl %ecx, i
 	subl $8, %esp
 	fstpl (%esp)
-	# Verifica se ja foi escrito todo uma linha para ocorrer o '\n'
-	movl j, %eax
+	
+	movl contQuebra, %eax
 	cmp p,%eax
 	jne motraComTab
-	# Formato quebra linha
+	
 	movl $1,%eax
-	movl %eax, j
+	movl %eax, contQuebra
 	pushl $showFloatLinha
 	jmp mostraComQuebra
 motraComTab:
-	# Formato continua linha
+	
 	incl %eax
-	movl %eax, j
+	movl %eax, contQuebra
 	pushl $showFloatTab
 mostraComQuebra:
 	call printf
@@ -497,21 +488,16 @@ mostraComQuebra:
 	addl $8,%ebp
 	movl i,%ecx
 	loop elementoMatrizC
+
 jmp fim
 
-mostraMatC:
-	movl SYS_OPEN, %eax # system call OPEN: retorna o descritor em %eax
-	movl $arqMatrizC, %ebx
-	movl O_WRONLY, %ecx
-	orl  O_CREATE, %ecx
-	movl S_IRUSR, %edx
-	orl  S_IWUSR, %edx
-	int  $0x80
-	movl %eax, ponteiroArqSaida
-	movl totElementosC , %ecx
 
+escreveMatC:
+	movl totElementosC , %ecx
 	pushl %ecx	
+
 	# Abre o arquivo da matriz C para a escrita
+	# Utilizando o total de espaço ocupado pela matriz
 	movl SYS_OPEN, %eax
 	movl $arqMatrizC, %ebx
 	movl O_WRONLY, %ecx
@@ -522,53 +508,60 @@ mostraMatC:
 	movl %eax,ponteiro
 
 	popl %ecx
+
 	# Inicia o valor do contador para quebrar a linha
 	movl $1, %eax
-	movl %eax, j
+	movl %eax, contQuebra
+
 getElementoC:
-	# Reatira da matriz e coloca na pilha para a chamada do sprintf
+
 	fldl (%ebp)
 	movl %ecx, i
 	subl $8, %esp
 	fstpl (%esp)
-	# Verifica se ja foi terminado de escrever uma linha
-	movl j, %eax
+	
+	# Verifica final de linha
+	movl contQuebra, %eax
 	cmp p,%eax
 	jne escritaNormal
-	# empilha formato com quebra linha
+
 	movl $1,%eax
-	movl %eax, j
-	pushl $showFloatQuebra
+	movl %eax, contQuebra
+	pushl $showFloatLinha
 	jmp continuaEscrita
 escritaNormal:
 	incl %eax
-	movl %eax, j
-	# empilha formato com tab
+	movl %eax, contQuebra
+	
 	pushl $showFloatTab
 continuaEscrita:
 	pushl $stringAux
-	# converte o valor float para string
+	
+	# Conversão do elemento em String
 	call sprintf
 	addl $16,%esp
 	addl $8,%ebp
-	# salva o tamanho da string gerada pela conversão
-	movl %eax, tmStr
-	# Escreve no arquivo da matriz C
+	
+	# Tamanho da Sting alocado em uma variavel 
+	# auxiliar
+	movl %eax, tamStringAux
+		
 	movl ponteiro,%ebx
 	movl $4, %eax
 	movl $stringAux, %ecx
-	movl tmStr, %edx
+	movl tamStringAux, %edx
 	int $0x80
 
 	movl i,%ecx
 	loop getElementoC
 
-	# Fecha o arquivo da matrix C
+	# Finaliza a escrita do Arquivo da matriz C
 	movl SYS_CLOSE, %eax
 	movl ponteiro,%ebx
 	int $0x80
 
-
+	# Chma o cabeçalho da matriz C e mostra o nome
+	# do arquivo de saida
 	pushl $cabMatrizC
 	call printf
 	addl $4, %esp
@@ -577,83 +570,12 @@ continuaEscrita:
 	pushl $escritoArq
 	call printf
 	add $4, %esp
+
 jmp fim
 
-mostraMatA:
-	pushl $cabMatrizA
-	call printf
-	addl $4, %esp
-	movl $matrizA, %edi
-	movl totElementosA , %ecx
-	movl $1, %eax
-	movl %eax, j
-elementoMatrizA:
-	# Reatira da matriz e coloca na pilha para a chamada do printf
-	fldl (%edi)
-	movl %ecx, i
-	subl $8, %esp
-	fstpl (%esp)
-	# Verifica se ja foi escrito todo uma linha para ocorrer o '\n'
-	movl j, %eax
-	cmp n,%eax
-	jne motraComTabA
-	# Formato quebra linha
-	movl $1,%eax
-	movl %eax, j
-	pushl $showFloatLinha
-	jmp mostraComQuebraA
-motraComTabA:
-	# Formato continua linha
-	incl %eax
-	movl %eax, j
-	pushl $showFloatTab
-mostraComQuebraA:
-	call printf
-	addl $12,%esp
-	addl $8,%edi
-	movl i,%ecx
-	loop elementoMatrizA
-ret 
 
-#Mostra a Matriz preenchida B
-mostraMatB:
-	pushl $cabMatrizB
-	call printf
-	addl $4, %esp
-	movl $matrizB, %esi
-	movl totElementosB , %ecx
-	movl $1, %eax
-	movl %eax, j
-elementoMatrizB:
-	# Reatira da matriz e coloca na pilha para a chamada do printf
-	fldl (%esi)
-	movl %ecx, i
-	subl $8, %esp
-	fstpl (%esp)
-	# Verifica se ja foi escrito todo uma linha para ocorrer o '\n'
-	movl j, %eax
-	cmp p,%eax
-	jne motraComTabB
-	# Formato quebra linha
-	movl $1,%eax
-	movl %eax, j
-	pushl $showFloatLinha
-	jmp mostraComQuebraB
-motraComTabB:
-	# Formato continua linha
-	incl %eax
-	movl %eax, j
-	pushl $showFloatTab
-mostraComQuebraB:
-	call printf
-	addl $12,%esp
-	addl $8,%esi
-	movl i,%ecx
-	loop elementoMatrizB
-ret
+############ INICIO DAS ROTINAS ############
 
-
-## INICIO DAS ROTINAS ##
 #Rotina para limpar os registradores
 limpaReg:
 	movl $0, %eax 
@@ -759,7 +681,110 @@ pulaLinha:
 	pushl $breakline
 	call printf
 
-## FIM DAS ROTINAS ##
+
+tratanomearq:
+
+	pushl %edi
+	movl $-1, %ebx
+
+volta3:
+
+	addl $1, %ebx
+	movb (%edi), %al
+	cmpb enter, %al
+	jz concluinomearq
+	cmpb espaco, %al
+	jz concluinomearq
+	addl $1, %edi
+	jmp volta3
+
+concluinomearq:
+	pushl %edi
+	popl %edi
+	movb NULL, %al
+	movb %al, (%edi)
+	addl $4, %esp
+ret
+
+## Mostra a Matriz preenchida A 
+mostraMatA:
+
+	pushl $cabMatrizA
+	call printf
+	addl $4, %esp
+	movl $matrizA, %edi
+	movl totElementosA , %ecx
+	movl $1, %eax
+	movl %eax, contQuebra
+
+elementoMatrizA:
+	
+	fldl (%edi)
+	movl %ecx, i
+	subl $8, %esp
+	fstpl (%esp)
+	
+	movl contQuebra, %eax
+	cmp n,%eax
+	jne motraComTabA
+	
+	movl $1,%eax
+	movl %eax, contQuebra
+	pushl $showFloatLinha
+	jmp mostraComQuebraA
+
+motraComTabA:
+	incl %eax
+	movl %eax, contQuebra
+	pushl $showFloatTab
+
+mostraComQuebraA:
+	call printf
+	addl $12,%esp
+	addl $8,%edi
+	movl i,%ecx
+	loop elementoMatrizA
+ret 
+
+
+#Mostra a Matriz preenchida B
+mostraMatB:
+	pushl $cabMatrizB
+	call printf
+	addl $4, %esp
+	movl $matrizB, %esi
+	movl totElementosB , %ecx
+	movl $1, %eax
+	movl %eax, contQuebra
+elementoMatrizB:
+	
+	fldl (%esi)
+	movl %ecx, i
+	subl $8, %esp
+	fstpl (%esp)
+	
+	movl contQuebra, %eax
+	cmp p,%eax
+	jne motraComTabB
+	
+	movl $1,%eax
+	movl %eax, contQuebra
+	pushl $showFloatLinha
+	jmp mostraComQuebraB
+motraComTabB:
+
+	incl %eax
+	movl %eax, contQuebra
+	pushl $showFloatTab
+mostraComQuebraB:
+	call printf
+	addl $12,%esp
+	addl $8,%esi
+	movl i,%ecx
+	loop elementoMatrizB
+ret
+
+############ FIM DAS ROTINAS ############
 
 fim:
 	pushl $finalizado
