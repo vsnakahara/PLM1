@@ -448,9 +448,6 @@ pedirOpcaoPrint:
 	cmpl $1 , opt
 	je escreveMatC
 
-	cmpl $2 , opt
-	jne incializaPrintCVideo
-
 ##Printa Matriz C na tela 
 incializaPrintCVideo:
 	pushl $cabMatrizC
@@ -574,7 +571,7 @@ continuaEscrita:
 jmp fim
 
 
-############ INICIO DAS ROTINAS ############
+############ INICIO DAS FUNÇÕES ############
 
 #Rotina para limpar os registradores
 limpaReg:
@@ -665,7 +662,7 @@ setMatrizC:
 	 fstpl (%ebp)
 
 	 # Limpeza dos registradores
-
+limpaPilha:
 	 subl $8, %esp
 	 fstpl (%esp)
 	 addl $8, %esp
@@ -683,12 +680,10 @@ pulaLinha:
 
 
 tratanomearq:
-
 	pushl %edi
 	movl $-1, %ebx
 
 volta3:
-
 	addl $1, %ebx
 	movb (%edi), %al
 	cmpb enter, %al
@@ -708,7 +703,6 @@ ret
 
 ## Mostra a Matriz preenchida A 
 mostraMatA:
-
 	pushl $cabMatrizA
 	call printf
 	addl $4, %esp
@@ -717,8 +711,7 @@ mostraMatA:
 	movl $1, %eax
 	movl %eax, contQuebra
 
-elementoMatrizA:
-	
+elementoMatrizA:	
 	fldl (%edi)
 	movl %ecx, i
 	subl $8, %esp
@@ -756,6 +749,7 @@ mostraMatB:
 	movl totElementosB , %ecx
 	movl $1, %eax
 	movl %eax, contQuebra
+
 elementoMatrizB:
 	
 	fldl (%esi)
@@ -771,11 +765,12 @@ elementoMatrizB:
 	movl %eax, contQuebra
 	pushl $showFloatLinha
 	jmp mostraComQuebraB
-motraComTabB:
 
+motraComTabB:
 	incl %eax
 	movl %eax, contQuebra
 	pushl $showFloatTab
+
 mostraComQuebraB:
 	call printf
 	addl $12,%esp
