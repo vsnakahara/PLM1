@@ -81,6 +81,10 @@ concat:			   .space 20
 tamStrArqIn:	   .space 20000
 
 
+ponteiro:		.int 0
+tmStr: 			.int 4
+stringAux:		.asciz	""
+
 pedeArqA:      .ascii "\nEntre com o nome do arquivo da Matriz A\n> "
 fimPedeArqA: 
 
@@ -326,26 +330,6 @@ loop lenum
 movl SYS_CLOSE, %eax
 int $0x80
 
-
-# main1:
-# 	movl $matrizA, %edi
-# 	movl totElementosA, %ecx
-
-# getMatrizA1:
-# 	pushl %ecx
-
-# 	fldl (%edi)
-# 	subl $8, %esp
-# 	fstpl (%esp)
-# 	pushl $formato2
-# 	call  printf
-# 	addl $12, %esp
-# 	addl $8, %edi
-# 	popl %ecx	
-
-# loop getMatrizA1
-
-
 #Percorre %edi , pulando 4 bytes para cada elemento
 
 inicioLeitura2:
@@ -407,24 +391,6 @@ loop lenum3
 movl SYS_CLOSE, %eax
 int $0x80
 
-
-# main2:
-# 	movl $matrizB, %esi
-# 	movl totElementosB, %ecx
-
-# # getMatriz2:
-# # 	pushl %ecx
-
-# # 	fldl (%esi)
-# # 	subl $8, %esp
-# # 	fstpl (%esp)
-# # 	pushl $formato2
-# # 	call  printf
-# # 	addl $12, %esp
-# # 	addl $8, %esi
-# # 	popl %ecx	
-
-# # loop getMatriz2
 
 #Move a linha da matriz A para iniciar os calculos dentro do loop	
 main:
@@ -542,64 +508,76 @@ mostraMatC:
 	movl %eax, ponteiroArqSaida
 	movl totElementosC , %ecx
 
-getMatrizC:
-	pushl %ecx
+	pushl %ecx	
+	# Abre o arquivo da matriz C para a escrita
+	movl SYS_OPEN, %eax
+	movl $arqMatrizC, %ebx
+	movl O_WRONLY, %ecx
+	orl	O_CREATE, %ecx
+	movl S_IRUSR, %edx
+	orl S_IWUSR, %edx
+	int $0x80
+	movl %eax,ponteiro
 
+	popl %ecx
+	# Inicia o valor do contador para quebrar a linha
+	movl $1, %eax
+	movl %eax, j
+getElementoC:
+	# Reatira da matriz e coloca na pilha para a chamada do sprintf
 	fldl (%ebp)
+	movl %ecx, i
 	subl $8, %esp
 	fstpl (%esp)
-	pushl $showFloatLinha
-	pushl $str_arq_out
-	call  sprintf
-	addl  $16, %esp
+	# Verifica se ja foi terminado de escrever uma linha
+	movl j, %eax
+	cmp p,%eax
+	jne escritaNormal
+	# empilha formato com quebra linha
+	movl $1,%eax
+	movl %eax, j
+	pushl $showFloatQuebra
+	jmp continuaEscrita
+escritaNormal:
+	incl %eax
+	movl %eax, j
+	# empilha formato com tab
+	pushl $showFloatTab
+continuaEscrita:
+	pushl $stringAux
+	# converte o valor float para string
+	call sprintf
+	addl $16,%esp
+	addl $8,%ebp
+	# salva o tamanho da string gerada pela conversão
+	movl %eax, tmStr
+	# Escreve no arquivo da matriz C
+	movl ponteiro,%ebx
+	movl $4, %eax
+	movl $stringAux, %ecx
+	movl tmStr, %edx
+	int $0x80
 
-	# movl %ecx, %eax
-	# movl $0,%edx
-	# movl p,%ebx
-	# divl %ebx
-	# cmpl $0, %ebp
-	movl  ponteiroArqSaida, %ebx
-	movl  SYS_WRITE, %eax
-	movl  $str_arq_out, %ecx
-	movl  %eax, %edx
-	int   $0x80
-	
-	addl $8, %ebp
-	popl %ecx
+	movl i,%ecx
+	loop getElementoC
+
+	# Fecha o arquivo da matrix C
+	movl SYS_CLOSE, %eax
+	movl ponteiro,%ebx
+	int $0x80
 
 
-loop getMatrizC
+	pushl $cabMatrizC
+	call printf
+	addl $4, %esp
 
-pushl $cabMatrizC
-call printf
-addl $4, %esp
-
-pushl $arqMatrizC
-pushl $escritoArq
-call printf
-add $4, %esp
-
-jmp fim
-#Mostra a Matriz preenchida A
+	pushl $arqMatrizC
+	pushl $escritoArq
+	call printf
+	add $4, %esp
 
 
-Escreve:
-	popl %ebp
-	popl %edx
-	popl %ecx
-	popl %ebx
-	popl %eax
-	movl  ponteiroArqSaida, %ebx
-	movl  SYS_WRITE, %eax
-	movl  $str_arq_out, %ecx
-	movl  %eax, %edx
-	int   $0x80
-
-	popl  %ecx
-	popl  %ebx	
-	popl %edx
-ret
-
+	jmp fim
 
 mostraMatA:
 	pushl $cabMatrizA
@@ -781,68 +759,8 @@ setMatrizC:
 	 addl $8, %esp
 
 	 popl %ebp 
-
-	#  fstpl (%esp)
-	#  pushl $formato1
-	#  call printf
-	#  call exit
-	# # fldl elementoA
-	# subl $8, %esp
-	# fstpl (%esp)
-	# pushl $formato1
-	# call printf
-	# addl $12, %esp
-
-
-	#subl $8, %esp
-	#fstpl (%esp)
-	# pushl $formato1
-	# call printf
-	# addl $12, %esp
-	
-	# call exit
-
-	# movl elementoA, %eax
-	# movl elementoB, %ebx
-	# mull %ebx
-	
-	# addl %eax , soma
-	# movl soma , %ebx
-
- #    movl  %ebx , (%ebp)
-	# popl %ebp  
 	
 ret
-
-#Mostra a Matriz preenchida resultante
-# getMatrizResultante:
-# 	pushl %ecx
-	
-# 	movl (%ebp),%ebx
-# 	addl $4, %ebp
-# 	pushl %ebp
-# 	pushl %ebx
-	
-# 	pushl $showElemento
-# 	call printf
-# 	addl $8, %esp
-
-# 	popl %ebp
-# 	popl %ecx
-
-
-# 	movl %ecx, %eax
-# 	movl $0,%edx
-# 	movl p,%ebx
-# 	divl %ebx
-# 	cmpl $1, %edx
-# 	jne contMR
-# 	movl %ecx,%ebx
-# 	pushl $breakline
-# 	call printf
-# 	movl %ebx,%ecx
-# contMR:
-# 	loop getMatrizResultante
 
 pulaLinha:
 	pushl $breakline
