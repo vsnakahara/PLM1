@@ -3,12 +3,12 @@
 abertura:	   .asciz "\n{  		  Multiplicacao matricial para matrizes                   }\n"
 integrantes:   .asciz "{_________ Rafael Altar _ RA: 83021 - Vanessa Nakahara _ RA: 83550 _______}\n"
 input1:		   .asciz "\nDigite o numero de linhas da matriz A:\n> "
-input2:		   .asciz "\nDigite o numero de colunas da matriz A (e numero de colunas da matriz B):\n> "
-input3:		   .asciz "\nDigite o numero de linhas da matriz B:\n> "
+input2:		   .asciz "\nDigite o numero de colunas da matriz A (e numero de linhas da matriz B):\n> "
+input3:		   .asciz "\nDigite o numero de colunas da matriz B:\n> "
 cabMatrizA:    .asciz "Matriz [ A ] Preenchida : \n"
 cabMatrizB:    .asciz "\n\nMatriz [ B ] Preenchida : \n"
 cabMatrizC:    .asciz "\n\nMatriz [ C ] Resultante : \n"
-cabOpcaoSaida: .asciz "== Como deseja visualizar a matriz resultante? == \n"
+cabOpcaoSaida: .asciz "\n\n== Como deseja visualizar a matriz resultante? == \n"
 opcoes:        .asciz "[ 1 ] Arquivo\n[ 2 ] Video \n> "
 escritoArq:	   .asciz "Transcrita no arquivo %s \n\n"
 finalizado:	   .asciz "\n\n== Programa Finalizado ==\n\n"
@@ -441,6 +441,8 @@ loopLinhaA: #<< Inicia LoopA para Linhas
 
 loop loopLinhaA # Finaliza LoopA para Linha >>
 #Mostra a Matriz preenchida B
+call mostraMatA
+call mostraMatB
 
 pedirOpcaoPrint:
 	pushl $cabOpcaoSaida
@@ -575,88 +577,80 @@ continuaEscrita:
 	pushl $escritoArq
 	call printf
 	add $4, %esp
-
-
-	jmp fim
+jmp fim
 
 mostraMatA:
 	pushl $cabMatrizA
 	call printf
 	addl $4, %esp
+	movl $matrizA, %edi
 	movl totElementosA , %ecx
-
-
-getMatrizA:
-	pushl %ecx
-
+	movl $1, %eax
+	movl %eax, j
+elementoMatrizA:
+	# Reatira da matriz e coloca na pilha para a chamada do printf
 	fldl (%edi)
+	movl %ecx, i
 	subl $8, %esp
 	fstpl (%esp)
-	
-	movl %ecx, %eax
-	movl $0,%edx
-	movl m,%ebx
-	divl %ebx
-	cmpl $0, %edx
-
-	jne tipoUmBreak 
-	pushl $showElementoFloat
-	jmp tipoOutro 
-
-tipoUmBreak:
-	pushl $showElementoBarra
-	
-	tipoOutro:
-		call  printf
-
-		addl $18, %esp
-
-		addl $8, %edi
-		popl %ecx	
-
-loop getMatrizA
+	# Verifica se ja foi escrito todo uma linha para ocorrer o '\n'
+	movl j, %eax
+	cmp n,%eax
+	jne motraComTabA
+	# Formato quebra linha
+	movl $1,%eax
+	movl %eax, j
+	pushl $showFloatLinha
+	jmp mostraComQuebraA
+motraComTabA:
+	# Formato continua linha
+	incl %eax
+	movl %eax, j
+	pushl $showFloatTab
+mostraComQuebraA:
+	call printf
+	addl $12,%esp
+	addl $8,%edi
+	movl i,%ecx
+	loop elementoMatrizA
+ret 
 
 #Mostra a Matriz preenchida B
 mostraMatB:
 	pushl $cabMatrizB
 	call printf
 	addl $4, %esp
+	movl $matrizB, %esi
 	movl totElementosB , %ecx
-
-getMatrizB:
-	pushl %ecx
-
+	movl $1, %eax
+	movl %eax, j
+elementoMatrizB:
+	# Reatira da matriz e coloca na pilha para a chamada do printf
 	fldl (%esi)
+	movl %ecx, i
 	subl $8, %esp
 	fstpl (%esp)
-	
-	movl %ecx, %eax
-	movl $0,%edx
-	movl n,%ebx
-	divl %ebx
-	cmpl $0, %edx
-	jne controlaLoopB 
-	pushl $showElementoFloat
-	jmp controlaPrintB
-
-controlaLoopB:
-	pushl $showElementoBarra
-	
-	controlaPrintB:
-		call  printf
-		addl $12, %esp
-		addl $8, %esi
-		popl %ecx	
-loop getMatrizB
-
-
-mostraMatrizC:
-	pushl $cabMatrizC
+	# Verifica se ja foi escrito todo uma linha para ocorrer o '\n'
+	movl j, %eax
+	cmp p,%eax
+	jne motraComTabB
+	# Formato quebra linha
+	movl $1,%eax
+	movl %eax, j
+	pushl $showFloatLinha
+	jmp mostraComQuebraB
+motraComTabB:
+	# Formato continua linha
+	incl %eax
+	movl %eax, j
+	pushl $showFloatTab
+mostraComQuebraB:
 	call printf
-	call limpaReg
-	movl totElementosC, %ecx
-	pushl %ecx
-	jmp setMatrizC
+	addl $12,%esp
+	addl $8,%esi
+	movl i,%ecx
+	loop elementoMatrizB
+ret
 
 
 ## INICIO DAS ROTINAS ##
@@ -748,7 +742,7 @@ setMatrizC:
 	 fldl soma
 	 fstpl (%ebp)
 
-	 # Limpesa dos registradores
+	 # Limpeza dos registradores
 
 	 subl $8, %esp
 	 fstpl (%esp)
@@ -759,7 +753,6 @@ setMatrizC:
 	 addl $8, %esp
 
 	 popl %ebp 
-	
 ret
 
 pulaLinha:
